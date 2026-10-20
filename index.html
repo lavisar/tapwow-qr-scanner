@@ -38,49 +38,41 @@
       <button id="start" type="button">Bật camera quét QR</button>
       <output id="result" aria-live="polite"></output>
     </main>
-    <script>
+    <script type="module">
+      import QrScanner from './vendor/qr-scanner/qr-scanner.min.js';
+
       const video = document.querySelector('#camera');
       const start = document.querySelector('#start');
       const status = document.querySelector('#status');
       const result = document.querySelector('#result');
-      let detector;
       let scanning = false;
-
-      async function scan() {
+      const scanner = new QrScanner(video, ({ data }) => {
         if (!scanning) return;
-        try {
-          const codes = await detector.detect(video);
-          if (codes.length) {
-            result.textContent = codes[0].rawValue;
-            status.textContent = 'Đã quét thành công';
-            scanning = false;
-            start.textContent = 'Quét mã khác';
-            video.srcObject.getTracks().forEach(track => track.stop());
-            return;
-          }
-        } catch (error) { console.error(error); }
-        requestAnimationFrame(scan);
-      }
+        scanning = false;
+        result.textContent = data;
+        status.textContent = 'Đã quét thành công';
+        start.textContent = 'Quét mã khác';
+        scanner.stop();
+      }, {
+        preferredCamera: 'environment',
+        maxScansPerSecond: 8,
+        returnDetailedScanResult: true,
+      });
 
       start.addEventListener('click', async () => {
-        if (!('BarcodeDetector' in window)) {
-          status.textContent = 'Trình duyệt này chưa hỗ trợ quét QR. Hãy mở bằng Chrome hoặc Edge mới nhất.';
-          return;
-        }
         start.disabled = true;
         status.textContent = 'Đang mở camera…';
         try {
-          detector = new BarcodeDetector({ formats: ['qr_code'] });
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-          video.srcObject = stream;
-          await video.play();
           result.textContent = '';
           scanning = true;
+          await scanner.start();
           status.textContent = 'Đang tìm mã QR…';
           start.textContent = 'Đang quét…';
-          scan();
         } catch (error) {
-          status.textContent = 'Không mở được camera. Hãy cho phép quyền camera rồi thử lại.';
+          scanning = false;
+          status.textContent = error.name === 'NotAllowedError'
+            ? 'Bạn chưa cấp quyền camera. Hãy cho phép camera rồi thử lại.'
+            : 'Không mở được camera. Hãy kiểm tra quyền camera rồi thử lại.';
           console.error(error);
         } finally {
           start.disabled = false;
