@@ -141,6 +141,7 @@
         maxScansPerSecond: 8,
         returnDetailedScanResult: true,
       });
+      scanner.setInversionMode('both');
 
       start.addEventListener('click', async () => {
         start.disabled = true;
