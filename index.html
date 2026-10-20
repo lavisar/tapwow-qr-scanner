@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07170f" />
+    <title>TapWow QR Scanner</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: radial-gradient(circle at top, #143c28, #07170f 56%); color: #f3f8f4; }
+      main { width: min(100%, 460px); padding: 28px 20px; }
+      h1 { margin: 0; font-size: 2rem; letter-spacing: -.05em; }
+      .lead { color: #b5c8bc; line-height: 1.55; }
+      .camera { position: relative; overflow: hidden; aspect-ratio: 1; border: 1px solid #4c8061; border-radius: 24px; background: #020604; box-shadow: 0 24px 80px #0008; }
+      video { width: 100%; height: 100%; object-fit: cover; }
+      .guide { position: absolute; inset: 14%; border: 3px solid #a5f4b5; border-radius: 18px; box-shadow: 0 0 0 100vmax #03100988; pointer-events: none; }
+      .guide::before, .guide::after { content: ""; position: absolute; width: 24px; height: 24px; border-color: #f7ffb1; border-style: solid; }
+      .guide::before { top: -3px; left: -3px; border-width: 4px 0 0 4px; border-radius: 14px 0 0; }
+      .guide::after { right: -3px; bottom: -3px; border-width: 0 4px 4px 0; border-radius: 0 0 14px; }
+      button { width: 100%; margin-top: 18px; border: 0; border-radius: 14px; padding: 15px; background: #b8fa8b; color: #102314; font: inherit; font-weight: 800; cursor: pointer; }
+      button:hover { background: #d5ffb8; }
+      button:disabled { opacity: .6; cursor: wait; }
+      .status { min-height: 1.4em; text-align: center; color: #b5c8bc; font-size: .9rem; }
+      output { display: block; min-height: 84px; margin-top: 22px; padding: 16px; border: 1px solid #315340; border-radius: 16px; background: #0b2215; color: #e2ffe9; overflow-wrap: anywhere; line-height: 1.5; }
+      output:empty::before { content: "Nội dung QR sẽ hiện tại đây"; color: #8ba293; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Quét QR cùng TapWow</h1>
+      <p class="lead">Đưa mã QR vào trong khung để xem nội dung ngay bên dưới.</p>
+      <section class="camera" aria-label="Khung camera quét mã QR">
+        <video id="camera" autoplay muted playsinline></video>
+        <div class="guide"></div>
+      </section>
+      <p class="status" id="status" role="status">Nhấn nút để bật camera</p>
+      <button id="start" type="button">Bật camera quét QR</button>
+      <output id="result" aria-live="polite"></output>
+    </main>
+    <script>
+      const video = document.querySelector('#camera');
+      const start = document.querySelector('#start');
+      const status = document.querySelector('#status');
+      const result = document.querySelector('#result');
+      let detector;
+      let scanning = false;
+
+      async function scan() {
+        if (!scanning) return;
+        try {
+          const codes = await detector.detect(video);
+          if (codes.length) {
+            result.textContent = codes[0].rawValue;
+            status.textContent = 'Đã quét thành công';
+            scanning = false;
+            start.textContent = 'Quét mã khác';
+            video.srcObject.getTracks().forEach(track => track.stop());
+            return;
+          }
+        } catch (error) { console.error(error); }
+        requestAnimationFrame(scan);
+      }
+
+      start.addEventListener('click', async () => {
+        if (!('BarcodeDetector' in window)) {
+          status.textContent = 'Trình duyệt này chưa hỗ trợ quét QR. Hãy mở bằng Chrome hoặc Edge mới nhất.';
+          return;
+        }
+        start.disabled = true;
+        status.textContent = 'Đang mở camera…';
+        try {
+          detector = new BarcodeDetector({ formats: ['qr_code'] });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+          video.srcObject = stream;
+          await video.play();
+          result.textContent = '';
+          scanning = true;
+          status.textContent = 'Đang tìm mã QR…';
+          start.textContent = 'Đang quét…';
+          scan();
+        } catch (error) {
+          status.textContent = 'Không mở được camera. Hãy cho phép quyền camera rồi thử lại.';
+          console.error(error);
+        } finally {
+          start.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
