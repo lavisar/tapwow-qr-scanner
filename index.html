@@ -3,54 +3,172 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#07170f" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
     <title>TapWow QR Scanner</title>
     <style>
-      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      :root {
+        color-scheme: light;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --background: #fafafa;
+        --foreground: #09090b;
+        --card: #ffffff;
+        --muted: #f4f4f5;
+        --muted-foreground: #71717a;
+        --border: #e4e4e7;
+        --primary: #15803d;
+        --primary-foreground: #ffffff;
+        --ring: #86efac;
+        --shadow: rgb(24 24 27 / 7%);
+        --card-radius: 20px;
+        --control-radius: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --background: #09090b;
+          --foreground: #fafafa;
+          --card: #111113;
+          --muted: #18181b;
+          --muted-foreground: #a1a1aa;
+          --border: #27272a;
+          --primary: #4ade80;
+          --primary-foreground: #052e16;
+          --ring: #166534;
+          --shadow: rgb(0 0 0 / 30%);
+        }
+      }
       * { box-sizing: border-box; }
-      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: radial-gradient(circle at top, #143c28, #07170f 56%); color: #f3f8f4; }
-      main { width: min(100%, 460px); padding: 28px 20px; }
-      h1 { margin: 0; font-size: 2rem; letter-spacing: -.05em; }
-      .lead { color: #b5c8bc; line-height: 1.55; }
-      .camera { position: relative; overflow: hidden; aspect-ratio: 1; border: 1px solid #4c8061; border-radius: 24px; background: #020604; box-shadow: 0 24px 80px #0008; }
-      video { width: 100%; height: 100%; object-fit: cover; }
-      .guide { position: absolute; inset: 14%; border: 3px solid #a5f4b5; border-radius: 18px; box-shadow: 0 0 0 100vmax #03100988; pointer-events: none; }
-      .guide::before, .guide::after { content: ""; position: absolute; width: 24px; height: 24px; border-color: #f7ffb1; border-style: solid; }
-      .guide::before { top: -3px; left: -3px; border-width: 4px 0 0 4px; border-radius: 14px 0 0; }
-      .guide::after { right: -3px; bottom: -3px; border-width: 0 4px 4px 0; border-radius: 0 0 14px; }
-      button { width: 100%; margin-top: 18px; border: 0; border-radius: 14px; padding: 15px; background: #b8fa8b; color: #102314; font: inherit; font-weight: 800; cursor: pointer; }
-      button:hover { background: #d5ffb8; }
-      button:disabled { opacity: .6; cursor: wait; }
-      .status { min-height: 1.4em; text-align: center; color: #b5c8bc; font-size: .9rem; }
-      output { display: block; min-height: 84px; margin-top: 22px; padding: 16px; border: 1px solid #315340; border-radius: 16px; background: #0b2215; color: #e2ffe9; overflow-wrap: anywhere; line-height: 1.5; }
-      output:empty::before { content: "Nội dung QR sẽ hiện tại đây"; color: #8ba293; }
+      body { min-width: 320px; min-height: 100vh; min-height: 100dvh; margin: 0; background: var(--background); color: var(--foreground); }
+      .page-shell { width: min(100%, 1120px); min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: 24px 28px; display: flex; flex-direction: column; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+      .brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+      .brand-name { font-size: 15px; font-weight: 750; letter-spacing: -.04em; }
+      .brand-divider { width: 1px; height: 18px; background: var(--border); }
+      .brand-label, .header-note { color: var(--muted-foreground); font-size: 13px; }
+      .header-note { margin: 0; }
+      .layout { flex: 1; display: grid; grid-template-columns: minmax(0, .9fr) minmax(400px, 1fr); align-items: center; gap: clamp(36px, 7vw, 88px); padding: 52px 0; }
+      .intro { max-width: 420px; }
+      .eyebrow { margin: 0 0 18px; color: var(--primary); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
+      h1 { max-width: 10ch; margin: 0; font-size: clamp(42px, 5.8vw, 68px); font-weight: 680; line-height: 1.02; letter-spacing: -.065em; }
+      .lead { max-width: 36ch; margin: 22px 0 0; color: var(--muted-foreground); font-size: 16px; line-height: 1.7; }
+      .scan-card { padding: 20px; border: 1px solid var(--border); border-radius: var(--card-radius); background: var(--card); box-shadow: 0 18px 48px var(--shadow); }
+      .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+      .card-heading h2 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.02em; }
+      .card-heading > div > p { margin: 4px 0 0; color: var(--muted-foreground); font-size: 12px; }
+      .status { display: inline-flex; align-items: center; gap: 7px; margin: 0; color: var(--muted-foreground); font-size: 12px; white-space: nowrap; }
+      .status-indicator { width: 7px; height: 7px; border-radius: 50%; background: var(--muted-foreground); }
+      .status-hint { margin: 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.4; }
+      .status[data-state="working"] .status-indicator { background: #eab308; }
+      .status[data-state="success"] .status-indicator { background: var(--primary); }
+      .status[data-state="error"] .status-indicator { background: #ef4444; }
+      .camera { position: relative; display: grid; place-items: center; overflow: hidden; width: 100%; aspect-ratio: 1; border: 1px solid var(--border); border-radius: 16px; background: #09090b; }
+      video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .camera-placeholder { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; padding: 24px; color: #a1a1aa; text-align: center; pointer-events: none; }
+      .camera-placeholder strong { color: #e4e4e7; font-size: 14px; font-weight: 550; }
+      .camera-placeholder span { font-size: 12px; }
+      .camera.is-active .camera-placeholder { visibility: hidden; opacity: 0; }
+      .guide { position: absolute; inset: 16%; border: 2px solid var(--primary); border-radius: 16px; box-shadow: 0 0 0 999px rgb(9 9 11 / 30%); pointer-events: none; }
+      .controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+      button { min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--control-radius); background: var(--primary); color: var(--primary-foreground); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; transition: background-color 150ms ease, transform 150ms ease, opacity 150ms ease; }
+      button:hover:not(:disabled) { filter: brightness(.96); }
+      button:active:not(:disabled) { transform: scale(.98); }
+      button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+      button:disabled { cursor: wait; opacity: .65; }
+      .result { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+      .result-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+      .result-heading h3 { margin: 0; font-size: 13px; font-weight: 600; }
+      .result-heading span { color: var(--muted-foreground); font-size: 11px; }
+      output { display: block; min-height: 58px; padding: 12px; border: 1px solid var(--border); border-radius: var(--control-radius); background: var(--muted); color: var(--foreground); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
+      output:empty::before { content: "Nội dung QR sẽ hiện tại đây"; color: var(--muted-foreground); }
+      footer { padding-top: 8px; color: var(--muted-foreground); font-size: 12px; text-align: center; }
+      @media (max-width: 760px) {
+        .page-shell { padding: 18px 16px 20px; }
+        .header-note { display: none; }
+        .layout { grid-template-columns: minmax(0, 1fr); gap: 26px; align-content: start; padding: 40px 0 24px; }
+        .intro { max-width: none; }
+        .eyebrow { margin-bottom: 12px; }
+        h1 { max-width: 12ch; font-size: clamp(40px, 11vw, 52px); }
+        .lead { margin-top: 14px; font-size: 15px; }
+        .scan-card { padding: 14px; }
+        .controls { align-items: stretch; flex-direction: column; }
+        button { width: 100%; min-height: 44px; }
+        footer { padding: 2px 8px 12px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <h1>Quét QR cùng TapWow</h1>
-      <p class="lead">Đưa mã QR vào trong khung để xem nội dung ngay bên dưới.</p>
-      <section class="camera" aria-label="Khung camera quét mã QR">
-        <video id="camera" autoplay muted playsinline></video>
-        <div class="guide"></div>
-      </section>
-      <p class="status" id="status" role="status">Nhấn nút để bật camera</p>
-      <button id="start" type="button">Bật camera quét QR</button>
-      <output id="result" aria-live="polite"></output>
-    </main>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="TapWow QR Scanner">
+          <span class="brand-name">TapWow</span>
+          <span class="brand-divider" aria-hidden="true"></span>
+          <span class="brand-label">QR Scanner</span>
+        </a>
+        <p class="header-note">Quét nhanh ngay trên trình duyệt</p>
+      </header>
+      <main class="layout">
+        <section class="intro">
+          <p class="eyebrow">Quét mã tức thì</p>
+          <h1>Quét QR thật nhanh.</h1>
+          <p class="lead">Đưa mã QR vào khung camera. Nội dung quét được sẽ hiện ngay bên dưới.</p>
+        </section>
+        <section class="scan-card" aria-label="Trình quét mã QR">
+          <div class="card-heading">
+            <div>
+              <h2>Camera</h2>
+              <p>Canh mã QR vào trong khung</p>
+            </div>
+            <p class="status" id="status" data-state="ready" role="status" aria-live="polite">
+              <span class="status-indicator" aria-hidden="true"></span>
+              <span id="status-text">Sẵn sàng</span>
+            </p>
+          </div>
+          <div class="camera" id="camera-frame" aria-label="Khung camera quét mã QR">
+            <video id="camera" autoplay muted playsinline></video>
+            <div class="camera-placeholder" id="camera-placeholder">
+              <strong>Camera sẽ hiển thị tại đây</strong>
+              <span>Nhấn nút bên dưới để bắt đầu quét</span>
+            </div>
+            <div class="guide" aria-hidden="true"></div>
+          </div>
+          <div class="controls">
+            <p class="status-hint">Camera chỉ bật khi bạn cho phép</p>
+            <button id="start" type="button">Bật camera</button>
+          </div>
+          <div class="result">
+            <div class="result-heading">
+              <h3>Nội dung QR</h3>
+              <span id="result-type">Chưa có kết quả</span>
+            </div>
+            <output id="result" aria-live="polite"></output>
+          </div>
+        </section>
+      </main>
+      <footer>Không cần cài ứng dụng</footer>
+    </div>
     <script type="module">
       import QrScanner from './vendor/qr-scanner/qr-scanner.min.js';
 
       const video = document.querySelector('#camera');
+      const cameraFrame = document.querySelector('#camera-frame');
       const start = document.querySelector('#start');
       const status = document.querySelector('#status');
+      const statusText = document.querySelector('#status-text');
+      const statusHint = document.querySelector('.status-hint');
       const result = document.querySelector('#result');
+      const resultType = document.querySelector('#result-type');
       let scanning = false;
       const scanner = new QrScanner(video, ({ data }) => {
         if (!scanning) return;
         scanning = false;
         result.textContent = data;
-        status.textContent = 'Đã quét thành công';
+        status.dataset.state = 'success';
+        statusText.textContent = 'Đã quét';
+        resultType.textContent = 'Đã nhận nội dung';
         start.textContent = 'Quét mã khác';
         scanner.stop();
       }, {
@@ -61,20 +179,31 @@
 
       start.addEventListener('click', async () => {
         start.disabled = true;
-        status.textContent = 'Đang mở camera…';
+        status.dataset.state = 'working';
+        statusText.textContent = 'Đang mở camera';
+        statusHint.textContent = 'Camera chỉ bật khi bạn cho phép';
         try {
           result.textContent = '';
+          resultType.textContent = 'Đang chờ kết quả';
           scanning = true;
+          cameraFrame.classList.add('is-active');
           await scanner.start();
           if (scanning) {
-            status.textContent = 'Đang tìm mã QR…';
+            statusText.textContent = 'Đang quét';
             start.textContent = 'Đang quét…';
           }
         } catch (error) {
           scanning = false;
-          status.textContent = error.name === 'NotAllowedError'
-            ? 'Bạn chưa cấp quyền camera. Hãy cho phép camera rồi thử lại.'
-            : 'Không mở được camera. Hãy kiểm tra quyền camera rồi thử lại.';
+          scanner.stop();
+          cameraFrame.classList.remove('is-active');
+          status.dataset.state = 'error';
+          statusText.textContent = error.name === 'NotAllowedError'
+            ? 'Cần quyền camera'
+            : 'Camera không mở được';
+          statusHint.textContent = error.name === 'NotAllowedError'
+            ? 'Cho phép camera trong Safari rồi thử lại.'
+            : 'Kiểm tra quyền camera rồi thử lại.';
+          resultType.textContent = 'Chưa có kết quả';
           console.error(error);
         } finally {
           start.disabled = false;
