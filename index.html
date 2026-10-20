@@ -40,18 +40,7 @@
       }
       * { box-sizing: border-box; }
       body { min-width: 320px; min-height: 100vh; min-height: 100dvh; margin: 0; background: var(--background); color: var(--foreground); }
-      .page-shell { width: min(100%, 1120px); min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: 24px 28px; display: flex; flex-direction: column; }
-      .topbar { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
-      .brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
-      .brand-name { font-size: 15px; font-weight: 750; letter-spacing: -.04em; }
-      .brand-divider { width: 1px; height: 18px; background: var(--border); }
-      .brand-label, .header-note { color: var(--muted-foreground); font-size: 13px; }
-      .header-note { margin: 0; }
-      .layout { flex: 1; display: grid; grid-template-columns: minmax(0, .9fr) minmax(400px, 1fr); align-items: center; gap: clamp(36px, 7vw, 88px); padding: 52px 0; }
-      .intro { max-width: 420px; }
-      .eyebrow { margin: 0 0 18px; color: var(--primary); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
-      h1 { max-width: 10ch; margin: 0; font-size: clamp(42px, 5.8vw, 68px); font-weight: 680; line-height: 1.02; letter-spacing: -.065em; }
-      .lead { max-width: 36ch; margin: 22px 0 0; color: var(--muted-foreground); font-size: 16px; line-height: 1.7; }
+      .page-shell { width: min(100%, 540px); min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: 24px 16px; display: grid; align-items: center; }
       .scan-card { padding: 20px; border: 1px solid var(--border); border-radius: var(--card-radius); background: var(--card); box-shadow: 0 18px 48px var(--shadow); }
       .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
       .card-heading h2 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.02em; }
@@ -75,25 +64,17 @@
       button:active:not(:disabled) { transform: scale(.98); }
       button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
       button:disabled { cursor: wait; opacity: .65; }
-      .result { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+      .result { margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
       .result-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
       .result-heading h3 { margin: 0; font-size: 13px; font-weight: 600; }
       .result-heading span { color: var(--muted-foreground); font-size: 11px; }
       output { display: block; min-height: 58px; padding: 12px; border: 1px solid var(--border); border-radius: var(--control-radius); background: var(--muted); color: var(--foreground); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
       output:empty::before { content: "Nội dung QR sẽ hiện tại đây"; color: var(--muted-foreground); }
-      footer { padding-top: 8px; color: var(--muted-foreground); font-size: 12px; text-align: center; }
       @media (max-width: 760px) {
-        .page-shell { padding: 18px 16px 20px; }
-        .header-note { display: none; }
-        .layout { grid-template-columns: minmax(0, 1fr); gap: 26px; align-content: start; padding: 40px 0 24px; }
-        .intro { max-width: none; }
-        .eyebrow { margin-bottom: 12px; }
-        h1 { max-width: 12ch; font-size: clamp(40px, 11vw, 52px); }
-        .lead { margin-top: 14px; font-size: 15px; }
+        .page-shell { padding: 16px; }
         .scan-card { padding: 14px; }
         .controls { align-items: stretch; flex-direction: column; }
         button { width: 100%; min-height: 44px; }
-        footer { padding: 2px 8px 12px; }
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
@@ -101,55 +82,39 @@
     </style>
   </head>
   <body>
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="/" aria-label="TapWow QR Scanner">
-          <span class="brand-name">TapWow</span>
-          <span class="brand-divider" aria-hidden="true"></span>
-          <span class="brand-label">QR Scanner</span>
-        </a>
-        <p class="header-note">Quét nhanh ngay trên trình duyệt</p>
-      </header>
-      <main class="layout">
-        <section class="intro">
-          <p class="eyebrow">Quét mã tức thì</p>
-          <h1>Quét QR thật nhanh.</h1>
-          <p class="lead">Đưa mã QR vào khung camera. Nội dung quét được sẽ hiện ngay bên dưới.</p>
-        </section>
-        <section class="scan-card" aria-label="Trình quét mã QR">
-          <div class="card-heading">
-            <div>
-              <h2>Camera</h2>
-              <p>Canh mã QR vào trong khung</p>
-            </div>
-            <p class="status" id="status" data-state="ready" role="status" aria-live="polite">
-              <span class="status-indicator" aria-hidden="true"></span>
-              <span id="status-text">Sẵn sàng</span>
-            </p>
+    <main class="page-shell">
+      <section class="scan-card" aria-label="Trình quét mã QR">
+        <div class="result">
+          <div class="result-heading">
+            <h3>Nội dung QR</h3>
+            <span id="result-type">Chưa có kết quả</span>
           </div>
-          <div class="camera" id="camera-frame" aria-label="Khung camera quét mã QR">
-            <video id="camera" autoplay muted playsinline></video>
-            <div class="camera-placeholder" id="camera-placeholder">
-              <strong>Camera sẽ hiển thị tại đây</strong>
-              <span>Nhấn nút bên dưới để bắt đầu quét</span>
-            </div>
-            <div class="guide" aria-hidden="true"></div>
+          <output id="result" aria-live="polite"></output>
+        </div>
+        <div class="card-heading">
+          <div>
+            <h2>Camera</h2>
+            <p>Canh mã QR vào trong khung</p>
           </div>
-          <div class="controls">
-            <p class="status-hint">Camera chỉ bật khi bạn cho phép</p>
-            <button id="start" type="button">Bật camera</button>
+          <p class="status" id="status" data-state="ready" role="status" aria-live="polite">
+            <span class="status-indicator" aria-hidden="true"></span>
+            <span id="status-text">Sẵn sàng</span>
+          </p>
+        </div>
+        <div class="camera" id="camera-frame" aria-label="Khung camera quét mã QR">
+          <video id="camera" autoplay muted playsinline></video>
+          <div class="camera-placeholder" id="camera-placeholder">
+            <strong>Camera sẽ hiển thị tại đây</strong>
+            <span>Nhấn nút bên dưới để bắt đầu quét</span>
           </div>
-          <div class="result">
-            <div class="result-heading">
-              <h3>Nội dung QR</h3>
-              <span id="result-type">Chưa có kết quả</span>
-            </div>
-            <output id="result" aria-live="polite"></output>
-          </div>
-        </section>
-      </main>
-      <footer>Không cần cài ứng dụng</footer>
-    </div>
+          <div class="guide" aria-hidden="true"></div>
+        </div>
+        <div class="controls">
+          <p class="status-hint">Camera chỉ bật khi bạn cho phép</p>
+          <button id="start" type="button">Bật camera</button>
+        </div>
+      </section>
+    </main>
     <script type="module">
       import QrScanner from './vendor/qr-scanner/qr-scanner.min.js';
 
