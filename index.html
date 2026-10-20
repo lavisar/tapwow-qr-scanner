@@ -66,8 +66,10 @@
           result.textContent = '';
           scanning = true;
           await scanner.start();
-          status.textContent = 'Đang tìm mã QR…';
-          start.textContent = 'Đang quét…';
+          if (scanning) {
+            status.textContent = 'Đang tìm mã QR…';
+            start.textContent = 'Đang quét…';
+          }
         } catch (error) {
           scanning = false;
           status.textContent = error.name === 'NotAllowedError'
